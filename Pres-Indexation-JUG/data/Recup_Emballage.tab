@@ -1,0 +1,16 @@
+!table
+!version 300
+!charset WindowsLatin1
+
+Definition Table
+  Type NATIVE Charset "WindowsLatin1"
+  Fields 9
+    Commune Char (25) ;
+    Code_Com Char (5) ;
+    Adresse Char (50) ;
+    ID Char (10) ;
+    DMT_TYPE Char (20) ;
+    X_CC43 Decimal (11, 3) ;
+    Y_CC43 Decimal (11, 3) ;
+    X_WGS84 Decimal (11, 8) ;
+    Y_WGS84 Decimal (11, 8) ;
