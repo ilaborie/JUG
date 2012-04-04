@@ -10,6 +10,10 @@ import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 public class Main {
 
 	private static final Logger log = LoggerFactory.getLogger("LoadData");
@@ -32,9 +36,11 @@ public class Main {
 		Client client = node.client();
 
 		try {
-			List<? extends DataLoader> loaders = Arrays.asList(
-					new DataLoader(Type.VERRE),
-					new DataLoader(Type.EMBALLAGE));
+
+			List<DataLoader> loaders = Lists.newArrayList();
+			for (Type type : Type.values()) {
+				loaders.add(new DataLoader(type));
+			}
 
 			for (DataLoader loader : loaders) {
 				loader.setClient(client);

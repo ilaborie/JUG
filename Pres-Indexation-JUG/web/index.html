@@ -39,7 +39,7 @@
 			<li id="doc-{{_id}}">
 				<img src="img/{{_type}}.png" />
 				{{#_source}}
-				<a href="{{link}}" target="_blank"> {{Adresse}} - {{Code_Com}} {{Commune}}</a>
+				<a href="{{link}}" target="_blank"> {{nom}}{{Adresse}} - {{Code_Com}}{{code_insee}} {{Commune}}</a>
 				{{/_source}}
 				</li>
 		{{/hits}}
@@ -99,6 +99,18 @@
 							<br/>
 							<label class="checkbox">
 								<input id="es-basic-verre" type="checkbox"> Recup. Verre
+							</label>
+							<br/>
+							<label class="checkbox">
+								<input id="es-basic-metro" type="checkbox"> Station Metro
+							</label>
+							<br/>
+							<label class="checkbox">
+								<input id="es-basic-tramway" type="checkbox"> Station Tramway
+							</label>
+							<br/>
+							<label class="checkbox">
+								<input id="es-basic-velo" type="checkbox"> Station Vélo
 							</label>
 						</form>
 					</div>

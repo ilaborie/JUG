@@ -17,14 +17,30 @@ var SearchComponents = {
 		doSearch: function(uri ,s) {
 			var isEmballage = $("#es-basic-emballage").is(':checked');
 			var isVerre = $("#es-basic-verre").is(':checked');
+			var isMetro = $("#es-basic-metro").is(':checked');
+			var isTramway = $("#es-basic-tramway").is(':checked');
+			var isVelo = $("#es-basic-velo").is(':checked');
 			// Build Url
 			var url = "http://localhost:9200/jug/";
-			if (isVerre && !isEmballage) {
-				url += "VERRE/";
-			} else if (!isVerre && isEmballage) {
-				url += "EMBALLAGE/";
+			
+			var type = [];
+			if (isVerre) {
+				type.push("VERRE");
 			}
-			url += uri;
+			if (isEmballage) {
+				type.push("EMBALLAGE");
+			}
+			if (isMetro) {
+				type.push("METRO");
+			}
+			if (isTramway) {
+				type.push("TRAMWAY");
+			}
+			if (isVelo) {
+				type.push("VELO");
+			}
+			url += type.join(",");
+			url += "/_search"
 			url += "?";
 			for (prop in s) {
 				url += prop;
