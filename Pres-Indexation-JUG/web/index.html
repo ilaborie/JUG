@@ -22,6 +22,16 @@
 		</div>
 	</script>
 	<!-- ElasticSearch Result -->
+	<script id="esFacets" type="text/html">	
+		{{#commune}}
+		<h3>Commune</h3>
+		<ul id="es-facet-commune">
+			{{#terms}}
+			<li><a href="">{{term}}</a> <span class="badge">{{count}}</span></li>
+			{{/terms}}
+		</ul>
+		{{/commune}}
+	</script>
 	<script id="esInfo" type="text/html">
 		{{#timed_out}}
 		<span class="label label-important">Timeout !Tooks {{took}}ms</span>
@@ -68,7 +78,7 @@
 	</div>
 
 	<!-- Notification Zone -->
-	<div id="zone-notify" class="container">
+	<div id="zone-notify">
 		<!-- Fill y Javascript -->
 	</div>
 
@@ -89,34 +99,39 @@
 						<h2>Basic Search</h2>
 						<form class="well form-search">
 							<input id="es-basic-q" type="text" class="input-medium search-query">
-							<button type="submit" id="btnSearch" class="btn btn-primary" style="margin-left :-16px;vertical-align: top;">
+							<button class="btn btn-primary" style="margin-left :-25px; border-radius: 16px; vertical-align: top;">
 								<i class="icon-search icon-white"></i>
 							</button>
 							<br/>
 							<label class="checkbox">
-								<input id="es-basic-emballage" type="checkbox"> Recup. Emballage
+								<input id="es-basic-emballage" type="checkbox" checked="checked"> Recup. Emballage
 							</label>
 							<br/>
 							<label class="checkbox">
-								<input id="es-basic-verre" type="checkbox"> Recup. Verre
+								<input id="es-basic-verre" type="checkbox" checked="checked"> Recup. Verre
 							</label>
 							<br/>
 							<label class="checkbox">
-								<input id="es-basic-metro" type="checkbox"> Station Metro
+								<input id="es-basic-metro" type="checkbox" checked="checked"> Station Metro
 							</label>
 							<br/>
 							<label class="checkbox">
-								<input id="es-basic-tramway" type="checkbox"> Station Tramway
+								<input id="es-basic-tramway" type="checkbox" checked="checked"> Station Tramway
 							</label>
 							<br/>
 							<label class="checkbox">
-								<input id="es-basic-velo" type="checkbox"> Station Vélo
+								<input id="es-basic-velo" type="checkbox" checked="checked"> Station Vélo
 							</label>
 						</form>
 					</div>
 					<div class="tab-pane" id="es-facet">
 						<h2>Facet Search</h2>
-						<p>Howdy, I'm in Section 2.</p>
+						<form class="well form-search">
+							<input id="es-facet-q" type="text" class="input-medium search-query">
+							<button class="btn btn-primary" style="margin-left :-25px; border-radius: 16px; vertical-align: top;">
+								<i class="icon-search icon-white"></i>
+							</button>
+						</form>
 					</div>
 					<div class="tab-pane" id="es-geo">
 						<h2>Geo Search</h2>
@@ -144,7 +159,7 @@
 		</div>
 
 		<!-- Search with SolR-->
-		<div id="solr-search" class="container">
+		<div id="solr-search" class="container hidden">
 			<h1>Search with SolR</h1>
 			TODO Search form
 			TODO Results
@@ -154,20 +169,19 @@
 		</div>
 
 		<!-- About-->
-	    <div id="about-search" class="container">
-	      <div class="hero-unit">
-	        <h1>Index Engine in Java</h1>
-	        <p>Demo website for ToulouseJUG</p>
-	        <p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
-	      </div>
-	    </div>
+		<div id="about-search" class="container hidden">
+			<div class="hero-unit">
+				<h1>Index Engine in Java</h1>
+				<p>Demo website for ToulouseJUG</p>
+				<p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
+			</div>
+		</div>
 	</div>
 	<hr>
 	<footer>
 		<p>By Igor</p>
 	</footer>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-<script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.1.min.js"><\/script>')</script>
+<script src="js/libs/jquery-1.7.1.min.js"></script>
 <script src="js/libs/bootstrap.min.js"></script>
 <script src="js/libs/ICanHaz.min.js"></script>
 <script src="js/script.js"></script>

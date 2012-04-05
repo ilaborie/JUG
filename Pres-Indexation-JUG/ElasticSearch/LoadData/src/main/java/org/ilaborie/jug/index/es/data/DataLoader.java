@@ -159,8 +159,8 @@ public class DataLoader {
 				.field("Y", this.getDouble(attrs.get(4)))
 				.endObject()
 				.startObject("WGS84")
-				.field("X", attrs.get(5))
-				.field("Y", attrs.get(6))
+				.field("X", this.getDouble(attrs.get(5)))
+				.field("Y", this.getDouble(attrs.get(6)))
 				.endObject()
 				.endObject();
 	}
@@ -188,8 +188,8 @@ public class DataLoader {
 				.field("Y", this.getDouble(attrs.get(3)))
 				.endObject()
 				.startObject("WGS84")
-				.field("X", attrs.get(4))
-				.field("Y", attrs.get(5))
+				.field("X", this.getDouble(attrs.get(4)))
+				.field("Y", this.getDouble(attrs.get(5)))
 				.endObject()
 				.endObject();
 	}
@@ -226,8 +226,8 @@ public class DataLoader {
 				.field("Y", this.getDouble(attrs.get(12)))
 				.endObject()
 				.startObject("WGS84")
-				.field("X", attrs.get(13))
-				.field("Y", attrs.get(14))
+				.field("X", this.getDouble(attrs.get(13)))
+				.field("Y", this.getDouble(attrs.get(14)))
 				.endObject()
 				.endObject();
 	}
@@ -255,8 +255,8 @@ public class DataLoader {
 				.field("Y", this.getDouble(attrs.get(5)))
 				.endObject()
 				.startObject("WGS84")
-				.field("X", attrs.get(6))
-				.field("Y", attrs.get(7))
+				.field("X", this.getDouble(attrs.get(6)))
+				.field("Y", this.getDouble(attrs.get(7)))
 				.endObject()
 				.endObject();
 	}
@@ -285,8 +285,8 @@ public class DataLoader {
 				.field("Y", this.getDouble(attrs.get(6)))
 				.endObject()
 				.startObject("WGS84")
-				.field("X", attrs.get(7))
-				.field("Y", attrs.get(8))
+				.field("X", this.getDouble(attrs.get(7)))
+				.field("Y", this.getDouble(attrs.get(8)))
 				.endObject()
 				.endObject();
 	}

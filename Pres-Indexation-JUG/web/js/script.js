@@ -21,7 +21,7 @@ var SearchComponents = {
 			var isTramway = $("#es-basic-tramway").is(':checked');
 			var isVelo = $("#es-basic-velo").is(':checked');
 			// Build Url
-			var url = "http://localhost:9200/jug/";
+			var url = "/jug/";
 			
 			var type = [];
 			if (isVerre) {
@@ -72,7 +72,7 @@ var SearchComponents = {
 		searchAll: function() {
 			// Search
 			var search =  {
-				form: 0,
+				from: 0,
 				size: 50
 			};
 			SearchComponents.es.doSearch("_search",search);
@@ -80,11 +80,49 @@ var SearchComponents = {
 		search: function(q) {
 			// Search
 			var search =  {
-				form: 0,
+				from: 0,
 				size: 50
 			};
 			search.q = q;
 			SearchComponents.es.doSearch("_search",search);
+		},
+		searchFacet: function(q, filter) {
+			// Search
+			var search =  {
+				from: 0,
+				size: 50,
+				facets : {
+					commune : { terms : {field : "Commune" }}
+			    }
+			};
+			if (q) {
+				search.query = { query_string : {query : q} };
+			} else {
+				search.query = { match_all : {}};
+			}
+			// Search
+			var url = "/jug/VERRE,EMBALLAGE,METRO,TRAMWAY,VELO/_search?";
+			var rest = new RestServiceJs(url);
+			rest.post(search, function (json) {
+				var html = ich.esFacets(json.facets);
+				$("#es-result-facet").html(html);
+
+				html = ich.esInfo(json);
+				$("#es-result-info").html(html);
+
+				var hits = json.hits;
+				// Create link
+				var lon;
+				var lat;
+				for (var i=0; i<hits.hits.length; i++) {
+					lon = hits.hits[i]['_source'].WGS84.X;
+					lat = hits.hits[i]['_source'].WGS84.Y;
+					hits.hits[i]._source.link =  getOsmLinks(lon, lat);
+				}
+				html = ich.esDoc(hits);
+				$("#es-result-docs").html(html);
+			});
+			
 		},
 		searchGeo: function() {
 		},
@@ -109,13 +147,23 @@ $(function(){
 	$("#topBar li.active a").click();
 	
 	// Bind ElasticSearch
-	$("#es-basic form").submit(function() {
+	$("#es-basic form button").click(function(event) {
 		var q = $("#es-basic-q").val();
 		if (q) {
 			SearchComponents.es.search(q);
 		} else {
 			SearchComponents.es.searchAll();
 		}
+		// Cancel event
+		event.preventDefault();
+		return false;
+	});
+	$("#es-facet form button").click(function(event) {
+		var q = $("#es-facet-q").val();
+		SearchComponents.es.searchFacet(q);
+		// Cancel event
+		event.preventDefault();
+		return false;
 	});
 	
 	
@@ -130,11 +178,10 @@ function RestServiceJs(newurl) {
 	this.post = function(model, callback) {
 		$.ajax({
 			type : 'POST',
-			jsonp: 'callback',
-			dataType: 'jsonp',
 			url : this.myurl,
-			data : JSON.stringify(model), // '{"name":"' + model.name + '"}',
-			dataType : 'text',
+			data :  JSON.stringify(model),
+			dataType: 'json',
+			jsonp: 'callback',
 			processData : false,
 			contentType : 'application/json',
 			success : callback,
@@ -150,7 +197,6 @@ function RestServiceJs(newurl) {
 			dataType: 'jsonp',
 			url : this.myurl,
 			data : JSON.stringify(model), // '{"name":"' + model.name + '"}',
-			dataType : 'text',
 			processData : false,
 			contentType : 'application/json',
 			success : callback,
