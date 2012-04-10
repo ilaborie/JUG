@@ -58,6 +58,8 @@ You should see ElasticSearch running:
 SolR
 ----
 
+[La recherche Full Text avec Solr](http://g-rossolini.developpez.com/tutoriels/solr/?page=introduction)
+
 
 Website
 -------

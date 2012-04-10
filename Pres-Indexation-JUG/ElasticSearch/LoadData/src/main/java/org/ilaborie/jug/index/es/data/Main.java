@@ -1,18 +1,12 @@
 package org.ilaborie.jug.index.es.data;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 public class Main {
 
@@ -36,16 +30,16 @@ public class Main {
 		Client client = node.client();
 
 		try {
-
-			List<DataLoader> loaders = Lists.newArrayList();
+			// Open Data Toulouse
+			DataLoader loader;
 			for (Type type : Type.values()) {
-				loaders.add(new DataLoader(type));
-			}
-
-			for (DataLoader loader : loaders) {
-				loader.setClient(client);
+				loader = new DataLoader(client, type);
 				loader.load();
 			}
+			
+			FablesLoader fablesLoader = new FablesLoader(client);
+			fablesLoader.load();
+
 		} catch (IOException e) {
 			log.error(":'((", e);
 		} finally {

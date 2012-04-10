@@ -24,7 +24,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.CharStreams;
 import com.google.common.io.InputSupplier;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class DataLoader.
  * 
@@ -32,7 +31,7 @@ import com.google.common.io.InputSupplier;
 public class DataLoader {
 
 	/** The client. */
-	private Client client;
+	private final Client client;
 
 	/** The bulk request. */
 	private BulkRequestBuilder bulkRequest;
@@ -43,11 +42,14 @@ public class DataLoader {
 	/**
 	 * Instantiates a new data loader.
 	 * 
+	 * @param client2
+	 * 
 	 * @param type
 	 *            the type
 	 */
-	public DataLoader(Type type) {
+	public DataLoader(Client client, Type type) {
 		super();
+		this.client = client;
 		this.type = type;
 	}
 
@@ -316,25 +318,6 @@ public class DataLoader {
 	 */
 	private Boolean getBoolean(String string) {
 		return "1".equals(string) ? Boolean.TRUE : Boolean.FALSE;
-	}
-
-	/**
-	 * Gets the client.
-	 * 
-	 * @return the client
-	 */
-	public Client getClient() {
-		return client;
-	}
-
-	/**
-	 * Sets the client.
-	 * 
-	 * @param client
-	 *            the new client
-	 */
-	public void setClient(Client client) {
-		this.client = client;
 	}
 
 }
