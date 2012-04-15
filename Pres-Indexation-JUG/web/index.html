@@ -21,17 +21,7 @@
 			{{message}}					
 		</div>
 	</script>
-	<!-- ElasticSearch Result -->
-	<script id="esFacets" type="text/html">	
-		{{#commune}}
-		<h3>Commune</h3>
-		<ul id="tls-facet-commune">
-			{{#terms}}
-			<li><a href="">{{term}}</a> <span class="badge">{{count}}</span></li>
-			{{/terms}}
-		</ul>
-		{{/commune}}
-	</script>
+	<!-- Search info -->
 	<script id="esInfo" type="text/html">
 		{{#timed_out}}
 		<span class="label label-important">Timeout !Tooks {{took}}ms</span>
@@ -43,6 +33,28 @@
 		{{/hits}}
 		{{/timed_out}}
 	</script>
+	<!-- Facet Result -->
+	<script id="esFacets" type="text/html">	
+		{{#commune}}
+		<h3>Commune</h3>
+		<div id="tls-facet-commune">
+			<label class="checkbox" style="font-weight: bold;"><input type="checkbox" id="facet-ALL">&nbsp;Toutes&nbsp;<span class="count">({{total}})</span></label>
+			{{#terms}}
+			<label class="checkbox"><input type="checkbox" id="facet-{{hash}}" value="{{term}}">&nbsp;{{term}}&nbsp; <span class="count">({{count}})</span></label>
+			{{/terms}}
+		</div>
+		{{/commune}}
+	</script>
+	<script id="esGeoFacets" type="text/html">	
+		{{#distance}}
+		<h3>Distance</h3>
+		<div id="tls-facet-distance">
+			{{#ranges}}
+			<label class="radio"><input type="radio" name="tls-facet-distance-range"  value="{{from}},{{to}}" />&nbsp;{{label}}&nbsp; <span class="count">({{total_count}})</span></label>
+			{{/ranges}}
+		</div>
+		{{/distance}}
+	</script>
 	<!-- Toulouse -->
 	<script id="esDoc" type="text/html">
 		<ol>
@@ -50,7 +62,7 @@
 			<li id="doc-{{_id}}">
 				<img src="img/{{_type}}.png" />
 				{{#_source}}
-				<a href="{{link}}" target="_blank"> {{nom}}{{Adresse}} - {{Code_Com}}{{code_insee}} {{Commune}}</a>
+				<a href="{{link}}" target="carto"> {{nom}} {{type}} - {{adresse}} - {{insee}} {{commune}}</a>
 				{{/_source}}
 				</li>
 		{{/hits}}
@@ -67,6 +79,7 @@
 				</li>
 		{{/hits}}
 		</ol>
+		<div id="fbl-next"></div>
 	</script>
 </head>
 <body>
@@ -81,8 +94,8 @@
 				<a class="brand" href="#">Démo</a>
 				<div class="nav-collapse">
 					<ul id="topBar" class="nav">
-						<li><a href="#tls">Toulouse</a></li>
-						<li class="active"><a href="#fbl">Fables</a></li>
+						<li class="active"><a href="#tls">Toulouse</a></li>
+						<li><a href="#fbl">Fables</a></li>
 						<li><a href="#about">About</a></li>
 					</ul>
 				</div><!--/.nav-collapse -->
@@ -99,59 +112,52 @@
 		<!-- Search into Toulouse -->
 		<div id="tls-search" class="container">
 			<h1>Grand Toulouse</h1>
-			<div class="tabbable">
-				<ul class="nav nav-tabs">
-					<li class="active"><a href="#tls-basic" data-toggle="tab">Basic Search</a></li>
-					<li><a href="#tls-facet" data-toggle="tab">Facet</a></li>
-				</ul>
-				<div class="tab-content">
-					<div class="tab-pane active" id="tls-basic">
-						<h2>Simple</h2>
-						<form class="well form-search">
-							<input id="tls-basic-q" type="text" class="input-medium search-query">
-							<button class="btn btn-primary" style="margin-left :-25px; border-radius: 16px; vertical-align: top;">
-								<i class="icon-search icon-white"></i>
-							</button>
-							<br/>
-							<label class="checkbox">
-								<input id="tls-basic-emballage" type="checkbox" checked="checked"> Recup. Emballage
-							</label>
-							<br/>
-							<label class="checkbox">
-								<input id="tls-basic-verre" type="checkbox" checked="checked"> Recup. Verre
-							</label>
-							<br/>
-							<label class="checkbox">
-								<input id="tls-basic-metro" type="checkbox" checked="checked"> Station Metro
-							</label>
-							<br/>
-							<label class="checkbox">
-								<input id="tls-basic-tramway" type="checkbox" checked="checked"> Station Tramway
-							</label>
-							<br/>
-							<label class="checkbox">
-								<input id="tls-basic-velo" type="checkbox" checked="checked"> Station Vélo
-							</label>
-						</form>
-					</div>
-					<div class="tab-pane" id="tls-facet">
-						<h2>Facet</h2>
-						<form class="well form-search">
-							<input id="tls-facet-q" type="text" class="input-medium search-query">
-							<button class="btn btn-primary" style="margin-left :-25px; border-radius: 16px; vertical-align: top;">
-								<i class="icon-search icon-white"></i>
-							</button>
-						</form>
-					</div>
-				</div>
-			</div>
+			<form class="well form-search">
+				<input id="tls-query" type="text" class="input-medium search-query">
+				<button class="btn btn-primary btn-search">
+					<i class="icon-search icon-white"></i>
+				</button>
+				<fieldset id="tls-type">
+					<legend>Type</legend>
+					<label class="checkbox">
+						<input id="tls-basic-emballage" type="checkbox" checked="checked">&nbsp;Recup. Emballage
+					</label>
+					<label class="checkbox">
+						<input id="tls-basic-verre" type="checkbox" checked="checked">&nbsp;Recup. Verre
+					</label>
+					<label class="checkbox">
+						<input id="tls-basic-metro" type="checkbox" checked="checked">&nbsp;Station Metro
+					</label>
+					<label class="checkbox">
+						<input id="tls-basic-tramway" type="checkbox" checked="checked">&nbsp;Station Tramway
+					</label>
+					<label class="checkbox">
+						<input id="tls-basic-velo" type="checkbox" checked="checked">&nbsp;Station Vélo
+					</label>
+				</fieldset>
+				<fieldset id="tls-facet">
+					<legend>Facet</legend>
+					<label class="radio">
+						<input id="tls-facet-none" name="tls-type" type="radio" checked="checked"/>&nbsp;Sans
+					</label>
+					<label class="radio">
+						<input id="tls-facet-commune" name="tls-type" type="radio"/>&nbsp;Commune
+					</label>
+					<label class="radio">
+						<input id="tls-facet-distance" name="tls-type" type="radio">&nbsp;Distance
+					</label>
+				</fieldset>
+			</form>
 			<!-- Search Result-->
 			<div id="tls-result-info">
 			</div>
 			<div class="row" style="padding-top: 1em">
 				<div id="tls-result-facet" class="span2">
 				</div>
-				<div id="tls-result-docs" class="span10">
+				<div id="tls-result-docs" class="span6">
+				</div>
+				<div id="tls-result-carto" class="span4">
+					<iframe name="carto" width="400" height="450" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src=""></iframe>
 				</div>
 			</div>
 		</div>
@@ -161,7 +167,7 @@
 			<h1>Fables</h1>
 			<form class="well form-search">
 				<input id="fbl-query" type="text" class="input-medium search-query">
-				<button class="btn btn-primary" style="margin-left :-25px; border-radius: 16px; vertical-align: top;">
+				<button class="btn btn-primary btn-search">
 					<i class="icon-search icon-white"></i>
 				</button>
 				<div id="fbl-type">
@@ -211,6 +217,7 @@
 <script src="js/libs/jquery-1.7.1.min.js"></script>
 <script src="js/libs/bootstrap.min.js"></script>
 <script src="js/libs/ICanHaz.min.js"></script>
+<script src="js/libs/jquery.appear-1.1.1.min.js"></script>
 <script src="js/script.js"></script>
 </body>
 </html>

@@ -177,6 +177,16 @@ public abstract class CsvDataLoader implements ILoader {
 		NumberFormat format = new DecimalFormat("#.#", symbol);
 		return format.parse(string).doubleValue();
 	}
+	
+	/**
+	 * Gets the integer.
+	 *
+	 * @param string the string
+	 * @return the integer
+	 */
+	protected Integer getInteger(String string) {
+		return Integer.valueOf(string);
+	}
 
 	/**
 	 * Gets the boolean.

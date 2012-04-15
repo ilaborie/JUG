@@ -53,12 +53,11 @@ public class VerreDataLoader extends CsvDataLoader {
 	@Override
 	protected XContentBuilder getSource(String line, List<String> attrs)
 			throws IOException, ParseException {
-		//Commune;Code_Com;Adresse;ID2;X_CC43;Y_CC43;X_WGS84;Y_WGS84
 		return XContentFactory.jsonBuilder().startObject()
 				.field("commune", attrs.get(0))
-				.field("code_insee", attrs.get(1))
+				.field("insee", attrs.get(1))
 				.field("adresse", attrs.get(2))
-				.field("id2", attrs.get(3))
+				.field("id", attrs.get(3))
 				.startObject("cc43")
 					.field("lat", this.getDouble(attrs.get(4)))
 					.field("lon", this.getDouble(attrs.get(5)))

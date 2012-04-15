@@ -12,11 +12,57 @@ body {
    Author: Laborie Igor
    ========================================================================== */
 
+.btn-search {
+	margin-left :-25px; 
+	border-radius: 16px; 
+	vertical-align: top;
+}
+
+#tls-type {
+	padding-top : 1em;
+	.checkbox {
+		margin-right: 2em;
+	}
+}
+
+#tls-facet {
+	padding-top : 1em;
+	.radio {
+		margin-right: 2em;
+	}
+}
 
 #fbl-type {
 	padding-top : 1em;
 	.radio {
 		margin-right: 2em;
+	}
+}
+
+#tls-result-facet {
+	label {
+		font-size: 16px;
+		font-family: helvetica;
+		line-height : 24px;
+		text-transform : capitalize;
+		.count {
+			font-size: 14px;
+			font-style : italic;
+			color : #008080;
+		}
+	}
+}
+
+#tls-result-docs {
+	ol {
+		font-size: 16px;
+		font-family: helvetica;
+		li {
+			line-height : 24px;
+			a {
+				text-transform : lowercase;
+			}
+		}
 	}
 }
 

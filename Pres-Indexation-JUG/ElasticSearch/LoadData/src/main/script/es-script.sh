@@ -15,6 +15,10 @@ curl -XPUT 'localhost:9200/jug?pretty=1' -d '{
                         "tokenizer" : "standard",
                         "filter" : ["standard", "lowercase", "stop", "ngram"]
                     },
+                    "string_lowercase" : {
+                        "tokenizer" : "keyword",
+                        "filter" : ["lowercase"]
+                    },
                     "soundex" : {
                         "tokenizer" : "whitespace",
                         "filter" : ["soundex"]
@@ -27,7 +31,7 @@ curl -XPUT 'localhost:9200/jug?pretty=1' -d '{
                 "filter" : {
                     "soundex" : {
                         "type" : "phonetic",
-                        "encoder" : "soundex"
+                        "encoder" : "double_metaphone"
                     },
                     "ngram" : {
                         "type" : "ngram",

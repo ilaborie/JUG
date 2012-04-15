@@ -52,11 +52,11 @@ public class EmballageDataLoader extends CsvDataLoader {
 	protected XContentBuilder getSource(String line, List<String> attrs)
 			throws IOException, ParseException {
 		return XContentFactory.jsonBuilder().startObject()
-				.field("commune", attrs.get(0).toLowerCase())
+				.field("commune", attrs.get(0))
 				.field("insee", attrs.get(1))
-				.field("adresse", attrs.get(2).toLowerCase())
+				.field("adresse", attrs.get(2))
 				.field("id", attrs.get(3))
-				.field("type", attrs.get(4))
+				.field("type", this.getType(attrs.get(4)))
 				.startObject("cc43")
 					.field("lat", this.getDouble(attrs.get(5)))
 					.field("lon", this.getDouble(attrs.get(6)))
@@ -66,6 +66,16 @@ public class EmballageDataLoader extends CsvDataLoader {
 					.field("lon", this.getDouble(attrs.get(8)))
 				.endObject()
 				.endObject();
+	}
+
+	/**
+	 * Gets the type.
+	 *
+	 * @param string the string
+	 * @return the type
+	 */
+	private String getType(String string) {
+		return string.substring("DMT_".length(),string.length()-1);
 	}
 
 }

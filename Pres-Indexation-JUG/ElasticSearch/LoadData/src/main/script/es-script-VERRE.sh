@@ -6,7 +6,7 @@ curl -XPUT 'localhost:9200/jug/VERRE/_mapping?pretty=true' -d '{
         "properties" : {
             "commune" : {
                 "type" : "string",
-                "analyzer" : "simple"
+                "analyzer" : "string_lowercase"
             },
             "adresse" : {
                 "type" : "multi_field",

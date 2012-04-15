@@ -23,7 +23,7 @@ curl -XPUT 'localhost:9200/jug/VELO/_mapping?pretty=true' -d '{
             },
             "commune" : {
                 "type" : "string",
-                "analyzer" : "simple"
+                "analyzer" : "string_lowercase"
             },
             "adresse" : {
                 "type" : "multi_field",

@@ -35,7 +35,10 @@ var SearchComponents = {
 			var search =  {
 				query : {
 					text : {
-						_all : term
+						_all : {
+							query : term,
+							analyzer : "francais"
+						}
 					}
 				}
 			};
@@ -71,85 +74,152 @@ var SearchComponents = {
 		}
 	},
 	toulouse: {
-		doSearch: function(uri ,s) {
-			var isEmballage = $("#tls-basic-emballage").is(':checked');
-			var isVerre = $("#tls-basic-verre").is(':checked');
-			var isMetro = $("#tls-basic-metro").is(':checked');
-			var isTramway = $("#tls-basic-tramway").is(':checked');
-			var isVelo = $("#tls-basic-velo").is(':checked');
+		lastFacetQuery : null,
+		doSearch: function(search) {
 			// Build Url
 			var url = "/jug/";
 			
+			// 
 			var type = [];
-			if (isVerre) {
+			if ($("#tls-basic-verre").is(':checked')) {
 				type.push("VERRE");
 			}
-			if (isEmballage) {
+			if ($("#tls-basic-emballage").is(':checked')) {
 				type.push("EMBALLAGE");
 			}
-			if (isMetro) {
+			if ($("#tls-basic-metro").is(':checked')) {
 				type.push("METRO");
 			}
-			if (isTramway) {
+			if ($("#tls-basic-tramway").is(':checked')) {
 				type.push("TRAMWAY");
 			}
-			if (isVelo) {
+			if ($("#tls-basic-velo").is(':checked')) {
 				type.push("VELO");
 			}
-			url += type.join(",");
-			url += "/_search"
-			url += "?";
-			for (prop in s) {
-				url += prop;
-				url += "=";
-				url += s[prop];
-				url += "&";
+			
+			if (type.length>0) {
+				url += type.join(",");	
+			} else {
+				url += "_all";
 			}
+			url += "/_search"
+			
+			// add default term
+			search.from= 0;
+			search.size= 50;
+
 			// Search
 			var rest = new RestServiceJs(url);
-			rest.findAll(function (json) {
-				$("#tls-result-facet").empty();
-
-				var html = ich.esInfo(json);
+			rest.post(search, function (json) {
+				var html;
+				// Result
+				html = ich.esInfo(json);
 				$("#tls-result-info").html(html);
 
+				// Facet
+				if (json.facets) {
+					// Hash
+					var facets = json.facets;
+					if (facets.commune) {
+						var tmp;
+						for (var i=0; i< facets.commune.terms.length;i++) {
+					        tmp = facets.commune.terms[i];
+					        tmp.hash = hashCode(tmp.term);
+						}
+					
+						html = ich.esFacets(facets);
+						$("#tls-result-facet").html(html);
+						$("#tls-result-facet input[type=checkbox]").click(SearchComponents.toulouse.doFilterFacet);
+					
+						// Check filtered facet
+						if (search.filter && search.filter.term && search.filter.term.commune) {
+					        var communes = search.filter.term.commune;
+					        for (var i=0; i<communes.length;i++) {
+					        	$("#facet-"+hashCode(communes[i])).attr("checked","checked");
+					        }
+						} else {
+					        $("#facet-ALL").attr("checked","checked");
+						}
+					} else if (facets.distance) {
+						var range;
+						for (var i=0; i<facets.distance.ranges.length;i++) {
+							range = facets.distance.ranges[i];
+							if (range.to && range.from) {
+								range.label = "[ "+range.from+", " + range.to+" ]";
+							} else if (range.to) {
+								range.label = "[ 0 , " + range.to+" ]";
+							} else if (range.from) {
+								range.label = "[ "+range.from+", ∞ ]";
+							}
+						}
+						html = ich.esGeoFacets(facets);
+						$("#tls-result-facet").html(html);
+						$("#tls-result-facet input[type=radio]").click(SearchComponents.toulouse.doFilterGeoFacet);
+						
+						// Check filtered Facet
+						if (search.filter && search.filter.geo_distance_range) {
+							var value = "" + search.filter.geo_distance_range.from +"," + search.filter.geo_distance_range.to;
+							$("input[type=radio][name=tls-facet-distance-range]").each(function(idx, elt){
+								if (value == $(elt).attr("value")) {
+									$(elt).attr("checked","checked");	
+								}
+							});
+						}
+					}
+				}
+
+				// Hits
 				var hits = json.hits;
 				// Create link
 				var lon;
 				var lat;
 				for (var i=0; i<hits.hits.length; i++) {
-					lon = hits.hits[i]['_source'].WGS84.X;
-					lat = hits.hits[i]['_source'].WGS84.Y;
+					lon = hits.hits[i]['_source'].wgs84.lat;
+					lat = hits.hits[i]['_source'].wgs84.lon;
 					hits.hits[i]._source.link =  getOsmLinks(lon, lat);
 				}
 				html = ich.esDoc(hits);
 				$("#tls-result-docs").html(html);
+
+				// Links
+				$("#tls-result-docs ol li a").click(function (event) {
+					var lnk = $(this).attr("href");
+					$("#tls-result-carto iframe").attr("src",lnk);
+					
+					// Cancel event
+					event.preventDefault();
+					return false;
+				});
 			});
 		},
 		searchAll: function() {
-			// Search
 			var search =  {
-				from: 0,
-				size: 50
+				query : {
+					match_all : {}
+				}
 			};
-			SearchComponents.es.doSearch("_search",search);
+			SearchComponents.toulouse.doSearch(search);
 		},
 		search: function(q) {
-			// Search
 			var search =  {
-				from: 0,
-				size: 50
+				query : {
+					query_string : { query : q }
+				}
 			};
-			search.q = q;
-			SearchComponents.es.doSearch("_search",search);
+			SearchComponents.toulouse.doSearch(search);
 		},
-		searchFacet: function(q, filter) {
+		searchFacet: function(q) {
 			// Search
 			var search =  {
 				from: 0,
 				size: 50,
 				facets : {
-					commune : { terms : {field : "Commune" }}
+					commune : { 
+						terms : {
+							field : "commune",
+							all_terms : true
+						},
+					}
 			    }
 			};
 			if (q) {
@@ -157,31 +227,120 @@ var SearchComponents = {
 			} else {
 				search.query = { match_all : {}};
 			}
+			// Store query
+			SearchComponents.toulouse.lastFacetQuery = search;
 			// Search
-			var url = "/jug/VERRE,EMBALLAGE,METRO,TRAMWAY,VELO/_search?";
-			var rest = new RestServiceJs(url);
-			rest.post(search, function (json) {
-				var html = ich.esFacets(json.facets);
-				$("#tls-result-facet").html(html);
-
-				html = ich.esInfo(json);
-				$("#tls-result-info").html(html);
-
-				var hits = json.hits;
-				// Create link
-				var lon;
-				var lat;
-				for (var i=0; i<hits.hits.length; i++) {
-					lon = hits.hits[i]['_source'].WGS84.X;
-					lat = hits.hits[i]['_source'].WGS84.Y;
-					hits.hits[i]._source.link =  getOsmLinks(lon, lat);
-				}
-				html = ich.esDoc(hits);
-				$("#tls-result-docs").html(html);
-			});
-			
+			SearchComponents.toulouse.doSearch(search);
 		},
-		searchGeo: function() {
+		doFilterFacet : function() {
+			var search = SearchComponents.toulouse.lastFacetQuery;
+			// Initialize filter
+			search.filter = { 
+				term : {
+					commune : []
+				}
+			};
+			// Check
+			var current = $(this).attr("id");
+			if (current == "facet-ALL") {
+				if($("#facet-ALL").is(":checked")) {
+					$("#tls-facet-commune input[type=checkbox]").removeAttr("checked");
+					$("#facet-ALL").attr("checked","checked");
+					search.filter = {match_all: {}};
+				}
+			} else {
+				$("#facet-ALL").removeAttr("checked");
+				$("#tls-facet-commune input[type=checkbox]").each( function() {
+					var commune = $(this).val();
+					if ($(this).is(":checked")) {
+						search.filter.term.commune.push(commune);
+					}
+				});
+			}
+			// Store query
+			SearchComponents.toulouse.lastFacetQuery = search;
+			// Search
+			SearchComponents.toulouse.doSearch(search);
+		},
+		searchGeo: function(q) {
+			// Search
+			var search =  {
+				from: 0,
+				size: 50,
+				sort : [ {
+					_geo_distance : {
+						wgs84: {},
+						order : "asc",
+						unit : "km"
+					}
+				}],
+				facets : {
+					distance : {
+						geo_distance :  {
+							wgs84 : {},
+							ranges : [ {
+									from: 0,
+									to: 0.25
+								} , {
+									from: 0.25,
+									to: 0.5
+								} , {
+									from: 0.5,
+									to: 1
+								} , {
+									from: 1,
+									to : 2
+								} , {
+									from: 2,
+									to : 5
+								} , {
+									from : 5,
+									to : 10
+								}
+							]
+						}
+					}
+			    }
+			};
+			
+			// Geoloc
+			var lon = 43.60908985;
+			var lat = 1.44803784;
+			search.sort[0]._geo_distance.wgs84.lon = lon;
+			search.sort[0]._geo_distance.wgs84.lat = lat;
+			search.facets.distance.geo_distance.wgs84.lon = lon;
+			search.facets.distance.geo_distance.wgs84.lat = lat;
+			
+			// Query
+			if (q) {
+				search.query = { query_string : {query : q} };
+			} else {
+				search.query = { match_all : {}};
+			}
+			// Store query
+			SearchComponents.toulouse.lastFacetQuery = search;
+			// Search
+			SearchComponents.toulouse.doSearch(search);
+		},
+		doFilterGeoFacet : function() {
+			var search = SearchComponents.toulouse.lastFacetQuery;
+			// Initialize filter
+			search.filter = { 
+				geo_distance_range : { }
+			};
+			// Set point
+			search.filter.geo_distance_range.wgs84 = search.facets.distance.geo_distance.wgs84
+			
+			// Check
+			var value = $("input[type=radio][name=tls-facet-distance-range]:checked").attr("value");
+			var range = value.split(',');
+			search.filter.geo_distance_range.from = parseFloat(range[0]);
+			search.filter.geo_distance_range.to = parseFloat(range[1]);
+			
+			// Store query
+			SearchComponents.toulouse.lastFacetQuery = search;
+			// Search
+			SearchComponents.toulouse.doSearch(search);
 		}
 	}
 };
@@ -189,8 +348,8 @@ var SearchComponents = {
 $(function(){
 	// Bind navigation
 	$("#topBar a").click(function () {
-		$("#topBar a").removeClass("active");
-		$(this).addClass("active");
+		$("#topBar a").parent().removeClass("active");
+		$(this).parent().addClass("active");
 
 		$("#Contents .container").addClass("hidden");		
 		var name = $(this).attr("href");
@@ -206,9 +365,13 @@ $(function(){
 	$("#topBar li.active a").click();
 	
 	// Bind Toulouse search
-	$("#tls-basic form button").click(function(event) {
-		var q = $("#tls-basic-q").val();
-		if (q) {
+	$("#tls-search form button").click(function(event) {
+		var q = $("#tls-query").val();
+		if ($("#tls-facet-commune").is(":checked")) {
+			SearchComponents.toulouse.searchFacet(q);
+		} else if ($("#tls-facet-distance").is(":checked")) {
+				SearchComponents.toulouse.searchGeo(q);
+		} else if (q) {
 			SearchComponents.toulouse.search(q);
 		} else {
 			SearchComponents.toulouse.searchAll();
@@ -217,27 +380,18 @@ $(function(){
 		event.preventDefault();
 		return false;
 	});
-	$("#tls-facet form button").click(function(event) {
-		var q = $("#tls-facet-q").val();
-		SearchComponents.toulouse.searchFacet(q);
-		// Cancel event
-		event.preventDefault();
-		return false;
-	});
-	
+		
 	// Bind Fable search
 	$("#fbl-search form button").click(function(event) {
 		var q = $("#fbl-query").val();
-		if (q) {
-			if ($("#fbl-fuzzy").is(':checked')) {
-				SearchComponents.fable.searchFuzzy(q);
-			} else if ($("#fbl-phonetic").is(':checked')) {
-				SearchComponents.fable.searchPhonetic(q);
-			} else {
-				SearchComponents.fable.search(q);
-			}
-		} else {
+		if (!q) {
 			SearchComponents.fable.searchAll();
+		} else if ($("#fbl-fuzzy").is(':checked')) {
+			SearchComponents.fable.searchFuzzy(q);
+		} else if ($("#fbl-phonetic").is(':checked')) {
+			SearchComponents.fable.searchPhonetic(q);
+		} else {
+			SearchComponents.fable.search(q);
 		}
 		// Cancel event
 		event.preventDefault();
@@ -245,8 +399,6 @@ $(function(){
 	});
 	
 });
-
-
 
 // REST
 function RestServiceJs(newurl) {
@@ -333,8 +485,20 @@ function RestServiceJs(newurl) {
 	}
 };
 
+
+var hashCode = function(s){
+    var hash = 0;
+    if (s.length == 0) return hash;
+    for (i = 0; i < s.length; i++) {
+        char = s.charCodeAt(i);
+        hash = ((hash<<5)-hash)+char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash;
+};
+
 var getOsmLinks = function(lon,lat) {
-	return "http://cartosm.eu/map?lon="+lon+"&lat="+lat+"&zoom=15&width=400&height=350&mark=true&nav=true&pan=true&zb=inout&style=default&icon=down"
+	return "http://cartosm.eu/map?lon="+lon+"&lat="+lat+"&zoom=15&width=400&height=450&mark=true&nav=true&pan=true&zb=inout&style=default&icon=down"
 };
 
 var doOnRestError = function(req, status, ex) {
@@ -369,6 +533,6 @@ var doOnRestError = function(req, status, ex) {
 
 	// Animate
 	div.fadeIn().delay(4000).fadeOut('slow');
-	
+
 };
 

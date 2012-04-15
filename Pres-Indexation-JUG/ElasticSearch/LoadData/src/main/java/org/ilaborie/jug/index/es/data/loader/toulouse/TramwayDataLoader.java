@@ -57,12 +57,12 @@ public class TramwayDataLoader extends CsvDataLoader {
 				.field("id", attrs.get(0))
 				.field("nom", attrs.get(1))
 				.startObject("cc43")
-				.field("lat", this.getDouble(attrs.get(2)))
-				.field("lon", this.getDouble(attrs.get(3)))
+					.field("lat", this.getDouble(attrs.get(2)))
+					.field("lon", this.getDouble(attrs.get(3)))
 				.endObject()
 				.startObject("wgs84")
-				.field("lat", this.getDouble(attrs.get(4)))
-				.field("lon", this.getDouble(attrs.get(5)))
+					.field("lat", this.getDouble(attrs.get(4)))
+					.field("lon", this.getDouble(attrs.get(5)))
 				.endObject();
 	}
 }
