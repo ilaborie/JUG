@@ -1,9 +1,26 @@
-package org.ilaborie.jug.index.es.data;
+package org.ilaborie.jug.index.es.data.loader;
 
+/**
+ * The Enum Type.
+ */
 public enum Type {
-	VERRE, EMBALLAGE,
-	VELO,TRAMWAY,METRO;
 
+	/** The VERRE. */
+	VERRE,
+	/** The EMBALLAGE. */
+	EMBALLAGE,
+	/** The VELO. */
+	VELO,
+	/** The TRAMWAY. */
+	TRAMWAY,
+	/** The METRO. */
+	METRO;
+
+	/**
+	 * Gets the file.
+	 * 
+	 * @return the file
+	 */
 	public String getFile() {
 		switch (this) {
 		case VERRE:

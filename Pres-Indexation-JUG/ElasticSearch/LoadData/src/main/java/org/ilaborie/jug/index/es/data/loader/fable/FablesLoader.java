@@ -1,10 +1,9 @@
-package org.ilaborie.jug.index.es.data;
+package org.ilaborie.jug.index.es.data.loader.fable;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
-import java.text.ParseException;
 import java.util.zip.Adler32;
 
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -13,6 +12,10 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.ilaborie.jug.index.es.data.IndexProperties;
+import org.ilaborie.jug.index.es.data.loader.ILoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteProcessor;
 import com.google.common.io.Files;
@@ -21,34 +24,52 @@ import com.google.common.io.Files;
  * The Class DataLoader.
  * 
  */
-public class FablesLoader {
+public class FablesLoader implements ILoader {
+
+	/** The Constant log. */
+	private final Logger log;
+
+	/** The Constant TYPE_FABLE. */
+	private static final String TYPE_FABLE = "FABLE";
 
 	/** The client. */
-	private final Client client;
+	private Client client;
 
 	/** The bulk request. */
 	private BulkRequestBuilder bulkRequest;
 
+	/** The has errors. */
+	private boolean hasErrors;
+
 	/**
 	 * Instantiates a new data loader.
-	 * 
-	 * @param client2
-	 * 
-	 * @param type
-	 *            the type
+	 *
 	 */
-	public FablesLoader(Client client) {
+	public FablesLoader() {
 		super();
-		this.client = client;
+		this.log = LoggerFactory.getLogger("LoadData." + TYPE_FABLE);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.ilaborie.jug.index.es.data.loader.ILoader#hasErrors()
+	 */
+	@Override
+	public boolean hasErrors() {
+		return this.hasErrors;
 	}
 
 	/**
 	 * Load.
-	 * 
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 *
+	 * @param client the client
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public void load() throws IOException {
+	public void load(Client client) throws IOException {
+		this.hasErrors = false;
+
+		this.client = client;
 		this.bulkRequest = this.client.prepareBulk();
 
 		URL resource = getClass().getResource("/Fables");
@@ -63,26 +84,24 @@ public class FablesLoader {
 			try {
 				this.bulkRequest.add(this.processFile(txt));
 			} catch (IOException e) {
-				e.printStackTrace();
+				log.warn("Aïe !", e);
+				this.hasErrors = true;
 			}
 		}
 
 		BulkResponse bulkResponse = bulkRequest.execute().actionGet();
 		if (bulkResponse.hasFailures()) {
-			throw new RuntimeException("Ooops !"
-					+ bulkResponse.buildFailureMessage());
+			this.hasErrors = true;
+			log.error("Ooops, {}", bulkResponse.buildFailureMessage());
 		}
 	}
 
 	/**
 	 * Process line.
-	 * 
-	 * @param line
-	 *            the line
+	 *
+	 * @param txtFable the txt fable
 	 * @return the index request builder
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
-	 * @throws ParseException
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public IndexRequestBuilder processFile(File txtFable) throws IOException {
 		long checksum = Files.getChecksum(txtFable, new Adler32());
@@ -90,7 +109,7 @@ public class FablesLoader {
 
 		XContentBuilder source = this.getSource(txtFable);
 		IndexRequestBuilder reqBuilder = this.client.prepareIndex(
-				IndexProperties.ES_INDEX, "FABLE", id)
+				IndexProperties.ES_INDEX, TYPE_FABLE, id)
 				.setSource(source);
 
 		return reqBuilder;
@@ -98,13 +117,10 @@ public class FablesLoader {
 
 	/**
 	 * Gets the source.
-	 * 
-	 * @param line
-	 *            the line
+	 *
+	 * @param fable the fable
 	 * @return the source
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
-	 * @throws ParseException
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public XContentBuilder getSource(File fable) throws IOException {
 		ByteProcessor<String> processor = new ByteProcessor<String>() {

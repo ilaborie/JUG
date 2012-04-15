@@ -15,11 +15,11 @@ var SearchComponents = {
 	},
 	es: {
 		doSearch: function(uri ,s) {
-			var isEmballage = $("#es-basic-emballage").is(':checked');
-			var isVerre = $("#es-basic-verre").is(':checked');
-			var isMetro = $("#es-basic-metro").is(':checked');
-			var isTramway = $("#es-basic-tramway").is(':checked');
-			var isVelo = $("#es-basic-velo").is(':checked');
+			var isEmballage = $("#tls-basic-emballage").is(':checked');
+			var isVerre = $("#tls-basic-verre").is(':checked');
+			var isMetro = $("#tls-basic-metro").is(':checked');
+			var isTramway = $("#tls-basic-tramway").is(':checked');
+			var isVelo = $("#tls-basic-velo").is(':checked');
 			// Build Url
 			var url = "/jug/";
 			
@@ -51,10 +51,10 @@ var SearchComponents = {
 			// Search
 			var rest = new RestServiceJs(url);
 			rest.findAll(function (json) {
-				$("#es-result-facet").empty();
+				$("#tls-result-facet").empty();
 
 				var html = ich.esInfo(json);
-				$("#es-result-info").html(html);
+				$("#tls-result-info").html(html);
 
 				var hits = json.hits;
 				// Create link
@@ -66,7 +66,7 @@ var SearchComponents = {
 					hits.hits[i]._source.link =  getOsmLinks(lon, lat);
 				}
 				html = ich.esDoc(hits);
-				$("#es-result-docs").html(html);
+				$("#tls-result-docs").html(html);
 			});
 		},
 		searchAll: function() {
@@ -105,10 +105,10 @@ var SearchComponents = {
 			var rest = new RestServiceJs(url);
 			rest.post(search, function (json) {
 				var html = ich.esFacets(json.facets);
-				$("#es-result-facet").html(html);
+				$("#tls-result-facet").html(html);
 
 				html = ich.esInfo(json);
-				$("#es-result-info").html(html);
+				$("#tls-result-info").html(html);
 
 				var hits = json.hits;
 				// Create link
@@ -120,7 +120,7 @@ var SearchComponents = {
 					hits.hits[i]._source.link =  getOsmLinks(lon, lat);
 				}
 				html = ich.esDoc(hits);
-				$("#es-result-docs").html(html);
+				$("#tls-result-docs").html(html);
 			});
 			
 		},
@@ -147,8 +147,8 @@ $(function(){
 	$("#topBar li.active a").click();
 	
 	// Bind ElasticSearch
-	$("#es-basic form button").click(function(event) {
-		var q = $("#es-basic-q").val();
+	$("#tls-basic form button").click(function(event) {
+		var q = $("#tls-basic-q").val();
 		if (q) {
 			SearchComponents.es.search(q);
 		} else {
@@ -158,8 +158,8 @@ $(function(){
 		event.preventDefault();
 		return false;
 	});
-	$("#es-facet form button").click(function(event) {
-		var q = $("#es-facet-q").val();
+	$("#tls-facet form button").click(function(event) {
+		var q = $("#tls-facet-q").val();
 		SearchComponents.es.searchFacet(q);
 		// Cancel event
 		event.preventDefault();
