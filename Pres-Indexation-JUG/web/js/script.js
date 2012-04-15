@@ -1,19 +1,76 @@
 /* Author: Igor Laborie
 */
 var SearchComponents = {
-	solr: {
+	fable: {
+		doSearch : function(search) {
+			search.from= 0;
+			search.size= 50;
+			
+			var url = "/jug/FABLE/_search";
+			var rest = new RestServiceJs(url);
+			rest.post(search, function (json) {
+				var html = ich.esInfo(json);
+				$("#fbl-result-info").html(html);
+				$("#fbl-result-text").empty();
+
+				var hits = json.hits;
+				html = ich.esFable(hits);
+				$("#fbl-result-docs").html(html);
+				
+				$("#fbl-result-docs ol li a").click(function () {
+					var text = $(this).attr("data-content");
+					$("#fbl-result-text").html('<pre>' + text + '</pre>');
+				});
+			});
+		},
 		searchAll: function() {
+			var search =  {
+				query : {
+					match_all : {}
+				}
+			};
+			SearchComponents.fable.doSearch(search);
 		},
-		search: function() {
+		search: function(term) {
+			var search =  {
+				query : {
+					text : {
+						_all : term
+					}
+				}
+			};
+			SearchComponents.fable.doSearch(search);
 		},
-		searchGeo: function() {
+		searchFuzzy: function(term) {
+			var search =  {
+				query : {
+					fuzzy : {
+						_all : {
+							value : term,
+							min_similarity : 0.7
+						}
+					}
+				}
+			};
+			SearchComponents.fable.doSearch(search);
 		},
-		searchSpelling: function() {
-		},
-		searchFuzzy: function() {
+		searchPhonetic: function(term) {
+			var search =  {
+				query : {
+					bool : {
+						should : {
+							field : { "title.soundex" : term }
+						},
+						must : {
+							field : { "lines.soundex" : term }
+						}
+					}
+				}
+			};
+			SearchComponents.fable.doSearch(search);
 		}
 	},
-	es: {
+	toulouse: {
 		doSearch: function(uri ,s) {
 			var isEmballage = $("#tls-basic-emballage").is(':checked');
 			var isVerre = $("#tls-basic-verre").is(':checked');
@@ -125,10 +182,6 @@ var SearchComponents = {
 			
 		},
 		searchGeo: function() {
-		},
-		searchSpelling: function() {
-		},
-		searchFuzzy: function() {
 		}
 	}
 };
@@ -142,17 +195,23 @@ $(function(){
 		$("#Contents .container").addClass("hidden");		
 		var name = $(this).attr("href");
 		$(name + "-search").removeClass("hidden");
+		
+		// Clean Search
+		$("#tls-result-facet").empty();
+		$("#tls-result-docs").empty();
+		$("#fbl-result-info").empty();
+		$("#fbl-result-text").empty();
 	});
 	// Click on active link
 	$("#topBar li.active a").click();
 	
-	// Bind ElasticSearch
+	// Bind Toulouse search
 	$("#tls-basic form button").click(function(event) {
 		var q = $("#tls-basic-q").val();
 		if (q) {
-			SearchComponents.es.search(q);
+			SearchComponents.toulouse.search(q);
 		} else {
-			SearchComponents.es.searchAll();
+			SearchComponents.toulouse.searchAll();
 		}
 		// Cancel event
 		event.preventDefault();
@@ -160,12 +219,30 @@ $(function(){
 	});
 	$("#tls-facet form button").click(function(event) {
 		var q = $("#tls-facet-q").val();
-		SearchComponents.es.searchFacet(q);
+		SearchComponents.toulouse.searchFacet(q);
 		// Cancel event
 		event.preventDefault();
 		return false;
 	});
 	
+	// Bind Fable search
+	$("#fbl-search form button").click(function(event) {
+		var q = $("#fbl-query").val();
+		if (q) {
+			if ($("#fbl-fuzzy").is(':checked')) {
+				SearchComponents.fable.searchFuzzy(q);
+			} else if ($("#fbl-phonetic").is(':checked')) {
+				SearchComponents.fable.searchPhonetic(q);
+			} else {
+				SearchComponents.fable.search(q);
+			}
+		} else {
+			SearchComponents.fable.searchAll();
+		}
+		// Cancel event
+		event.preventDefault();
+		return false;
+	});
 	
 });
 

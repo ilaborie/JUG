@@ -43,6 +43,7 @@
 		{{/hits}}
 		{{/timed_out}}
 	</script>
+	<!-- Toulouse -->
 	<script id="esDoc" type="text/html">
 		<ol>
 		{{#hits}}
@@ -50,6 +51,18 @@
 				<img src="img/{{_type}}.png" />
 				{{#_source}}
 				<a href="{{link}}" target="_blank"> {{nom}}{{Adresse}} - {{Code_Com}}{{code_insee}} {{Commune}}</a>
+				{{/_source}}
+				</li>
+		{{/hits}}
+		</ol>
+	</script>
+	<!-- Fable -->
+	<script id="esFable" type="text/html">
+		<ol>
+		{{#hits}}
+			<li id="doc-{{_id}}">
+				{{#_source}}
+				<a href="#" data-content="{{lines}}" title="{{title}}">{{title}}</a>
 				{{/_source}}
 				</li>
 		{{/hits}}
@@ -65,11 +78,11 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</a>
-				<a class="brand" href="#">Search Demo</a>
+				<a class="brand" href="#">Démo</a>
 				<div class="nav-collapse">
 					<ul id="topBar" class="nav">
-						<li class="active"><a href="#tls">Toulouse</a></li>
-						<li><a href="#fbl">Fables</a></li>
+						<li><a href="#tls">Toulouse</a></li>
+						<li class="active"><a href="#fbl">Fables</a></li>
 						<li><a href="#about">About</a></li>
 					</ul>
 				</div><!--/.nav-collapse -->
@@ -83,19 +96,17 @@
 	</div>
 
 	<div id="Contents">
-		<!-- Search with ES -->
+		<!-- Search into Toulouse -->
 		<div id="tls-search" class="container">
-			<h1>Search with ElasticSearch</h1>
+			<h1>Grand Toulouse</h1>
 			<div class="tabbable">
 				<ul class="nav nav-tabs">
 					<li class="active"><a href="#tls-basic" data-toggle="tab">Basic Search</a></li>
 					<li><a href="#tls-facet" data-toggle="tab">Facet</a></li>
-					<li><a href="#tls-geo" data-toggle="tab">Geo</a></li>
-					<li><a href="#tls-fuzzy" data-toggle="tab">Fuzzy</a></li>
 				</ul>
 				<div class="tab-content">
 					<div class="tab-pane active" id="tls-basic">
-						<h2>Basic Search</h2>
+						<h2>Simple</h2>
 						<form class="well form-search">
 							<input id="tls-basic-q" type="text" class="input-medium search-query">
 							<button class="btn btn-primary" style="margin-left :-25px; border-radius: 16px; vertical-align: top;">
@@ -124,21 +135,13 @@
 						</form>
 					</div>
 					<div class="tab-pane" id="tls-facet">
-						<h2>Facet Search</h2>
+						<h2>Facet</h2>
 						<form class="well form-search">
 							<input id="tls-facet-q" type="text" class="input-medium search-query">
 							<button class="btn btn-primary" style="margin-left :-25px; border-radius: 16px; vertical-align: top;">
 								<i class="icon-search icon-white"></i>
 							</button>
 						</form>
-					</div>
-					<div class="tab-pane" id="tls-geo">
-						<h2>Geo Search</h2>
-						<p>Howdy, I'm in Section 2.</p>
-					</div>
-					<div class="tab-pane" id="tls-fuzzy">
-						<h2>Fuzzy Search</h2>
-						<p>Howdy, I'm in Section 2.</p>
 					</div>
 				</div>
 			</div>
@@ -155,12 +158,33 @@
 
 		<!-- Search into Fables -->
 		<div id="fbl-search" class="container hidden">
-			<h1>Search into Fables</h1>
-			TODO Search form
-			TODO Results
-			TODO Facet
-			TODO Highlight
-			TODO docs
+			<h1>Fables</h1>
+			<form class="well form-search">
+				<input id="fbl-query" type="text" class="input-medium search-query">
+				<button class="btn btn-primary" style="margin-left :-25px; border-radius: 16px; vertical-align: top;">
+					<i class="icon-search icon-white"></i>
+				</button>
+				<div id="fbl-type">
+					<label class="radio">
+						<input id="fbl-text" name="fbl-type" type="radio" checked="checked"/>&nbsp;Normal
+					</label>
+					<label class="radio">
+						<input id="fbl-fuzzy" name="fbl-type" type="radio"/>&nbsp;Fuzzy
+					</label>
+					<label class="radio">
+						<input id="fbl-phonetic" name="fbl-type" type="radio">&nbsp;Phonetic
+					</label>
+				</div>
+			</form>
+			<!-- Search Result-->
+			<div id="fbl-result-info">
+			</div>
+			<div class="row" style="padding-top: 1em">
+				<div id="fbl-result-docs" class="span6">
+				</div>
+				<div id="fbl-result-text" class="span6">
+				</div>
+			</div>
 		</div>
 
 		<!-- About-->
