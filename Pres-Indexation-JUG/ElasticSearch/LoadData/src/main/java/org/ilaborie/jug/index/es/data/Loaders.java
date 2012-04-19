@@ -55,7 +55,7 @@ public class Loaders {
 		// Create node
 		log.info("Create node");
 		Node node = NodeBuilder.nodeBuilder()
-				.clusterName("elasticsearch_igor")
+				.clusterName("elasticsearch_laborie")
 				.client(true)
 				.build();
 

@@ -57,20 +57,15 @@
 	</script>
 	<!-- Toulouse -->
 	<script id="esDoc" type="text/html">
-		<ol>
 		{{#hits}}
 			<li id="doc-{{_id}}">
 				<img src="img/{{_type}}.png" />
-				{{#_source}}
-				<a href="{{link}}" target="carto"> {{nom}} {{type}} - {{adresse}} - {{insee}} {{commune}}</a>
-				{{/_source}}
-				</li>
+				<a href="{{link}}" target="carto">{{text}}</a>
+			</li>
 		{{/hits}}
-		</ol>
 	</script>
 	<!-- Fable -->
 	<script id="esFable" type="text/html">
-		<ol>
 		{{#hits}}
 			<li id="doc-{{_id}}">
 				{{#_source}}
@@ -78,8 +73,6 @@
 				{{/_source}}
 				</li>
 		{{/hits}}
-		</ol>
-		<div id="fbl-next"></div>
 	</script>
 </head>
 <body>
@@ -155,6 +148,9 @@
 				<div id="tls-result-facet" class="span2">
 				</div>
 				<div id="tls-result-docs" class="span6">
+					<ol>
+					</ol>
+					<div id="tls-next"></div>
 				</div>
 				<div id="tls-result-carto" class="span4">
 					<iframe name="carto" width="400" height="450" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src=""></iframe>
@@ -187,6 +183,9 @@
 			</div>
 			<div class="row" style="padding-top: 1em">
 				<div id="fbl-result-docs" class="span6">
+					<ol>
+					</ol>
+					<div id="fbl-next"></div>
 				</div>
 				<div id="fbl-result-text" class="span6">
 				</div>

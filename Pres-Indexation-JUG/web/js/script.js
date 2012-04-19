@@ -2,26 +2,71 @@
 */
 var SearchComponents = {
 	fable: {
+		scrollId : null,
+		showFable : function () {
+			var text = $(this).attr("data-content");
+			$("#fbl-result-text").html($('<pre>').text(text));
+		},
 		doSearch : function(search) {
 			search.from= 0;
 			search.size= 50;
 			
-			var url = "/jug/FABLE/_search";
+			SearchComponents.fable.scrollId = null;
+			
+			var url = "/jug/FABLE/_search?scroll=5m";
 			var rest = new RestServiceJs(url);
 			rest.post(search, function (json) {
+				// Scroll ID
+				SearchComponents.fable.scrollId = json._scroll_id;
+				
+				// Result
 				var html = ich.esInfo(json);
 				$("#fbl-result-info").html(html);
 				$("#fbl-result-text").empty();
 
 				var hits = json.hits;
 				html = ich.esFable(hits);
-				$("#fbl-result-docs").html(html);
+				$("#fbl-result-docs ol").html(html);
 				
-				$("#fbl-result-docs ol li a").click(function () {
-					var text = $(this).attr("data-content");
-					$("#fbl-result-text").html('<pre>' + text + '</pre>');
-				});
+				$("#fbl-result-docs ol li a").click(SearchComponents.fable.showFable);
+				
+				// Bind Fable scrolling
+				$("#fbl-next").appear(SearchComponents.fable.scrollData);
 			});
+		},
+		scrollData : function() {
+			if (SearchComponents.fable.scrollId) {
+				$("#fbl-next").addClass("loading");
+				// send next request
+				var url = "/_search/scroll?scroll=5m&scroll_id=" + SearchComponents.fable.scrollId;
+				var rest = new RestServiceJs(url);
+				rest.findAll(function (json) {
+					// Remove waiting
+					$("#fbl-next").removeClass("loading");
+				
+					// New Scroll ID
+					if (json.hits.hits.length>0) {
+						SearchComponents.fable.scrollId = json._scroll_id;	
+			
+						// Append result Result
+						var html = ich.esInfo(json);
+						$("#fbl-result-info").html(html);
+						$("#fbl-result-text").empty();
+
+						var hits = json.hits;
+						html = ich.esFable(hits);
+						$("#fbl-result-docs ol").append(html);
+				
+						// Handle click
+						$("#fbl-result-docs ol li a").click(SearchComponents.fable.showFable);
+						
+						// Bind Fable scrolling
+						$("#fbl-next").appear(SearchComponents.fable.scrollData);
+					} else {
+						SearchComponents.fable.scrollId = null;
+					}
+				});
+			}
 		},
 		searchAll: function() {
 			var search =  {
@@ -74,12 +119,17 @@ var SearchComponents = {
 		}
 	},
 	toulouse: {
+		scrollId : null,
 		lastFacetQuery : null,
+		lastSearch: null,
 		doSearch: function(search) {
+			// Scroll ID
+			SearchComponents.toulouse.scrollId = null;
+			
 			// Build Url
 			var url = "/jug/";
 			
-			// 
+			// Determine type
 			var type = [];
 			if ($("#tls-basic-verre").is(':checked')) {
 				type.push("VERRE");
@@ -102,95 +152,169 @@ var SearchComponents = {
 			} else {
 				url += "_all";
 			}
-			url += "/_search"
+			url += "/_search?scroll=5m";
 			
 			// add default term
 			search.from= 0;
 			search.size= 50;
 
 			// Search
+			SearchComponents.toulouse.lastSearch = search;
 			var rest = new RestServiceJs(url);
 			rest.post(search, function (json) {
+				// Handle next Scroll ID
+				SearchComponents.toulouse.scrollId = json._scroll_id;
+				
 				var html;
 				// Result
 				html = ich.esInfo(json);
 				$("#tls-result-info").html(html);
 
 				// Facet
+				$("#tls-result-facet").empty();
 				if (json.facets) {
-					// Hash
-					var facets = json.facets;
-					if (facets.commune) {
-						var tmp;
-						for (var i=0; i< facets.commune.terms.length;i++) {
-					        tmp = facets.commune.terms[i];
-					        tmp.hash = hashCode(tmp.term);
-						}
-					
-						html = ich.esFacets(facets);
-						$("#tls-result-facet").html(html);
-						$("#tls-result-facet input[type=checkbox]").click(SearchComponents.toulouse.doFilterFacet);
-					
-						// Check filtered facet
-						if (search.filter && search.filter.term && search.filter.term.commune) {
-					        var communes = search.filter.term.commune;
-					        for (var i=0; i<communes.length;i++) {
-					        	$("#facet-"+hashCode(communes[i])).attr("checked","checked");
-					        }
-						} else {
-					        $("#facet-ALL").attr("checked","checked");
-						}
-					} else if (facets.distance) {
-						var range;
-						for (var i=0; i<facets.distance.ranges.length;i++) {
-							range = facets.distance.ranges[i];
-							if (range.to && range.from) {
-								range.label = "[ "+range.from+", " + range.to+" ]";
-							} else if (range.to) {
-								range.label = "[ 0 , " + range.to+" ]";
-							} else if (range.from) {
-								range.label = "[ "+range.from+", ∞ ]";
-							}
-						}
-						html = ich.esGeoFacets(facets);
-						$("#tls-result-facet").html(html);
-						$("#tls-result-facet input[type=radio]").click(SearchComponents.toulouse.doFilterGeoFacet);
-						
-						// Check filtered Facet
-						if (search.filter && search.filter.geo_distance_range) {
-							var value = "" + search.filter.geo_distance_range.from +"," + search.filter.geo_distance_range.to;
-							$("input[type=radio][name=tls-facet-distance-range]").each(function(idx, elt){
-								if (value == $(elt).attr("value")) {
-									$(elt).attr("checked","checked");	
-								}
-							});
-						}
-					}
+					SearchComponents.toulouse.displayFacets(json.facets);
 				}
 
 				// Hits
 				var hits = json.hits;
-				// Create link
-				var lon;
-				var lat;
-				for (var i=0; i<hits.hits.length; i++) {
-					lon = hits.hits[i]['_source'].wgs84.lat;
-					lat = hits.hits[i]['_source'].wgs84.lon;
-					hits.hits[i]._source.link =  getOsmLinks(lon, lat);
-				}
+				SearchComponents.toulouse.fillHitsData(hits);
+
 				html = ich.esDoc(hits);
-				$("#tls-result-docs").html(html);
+				$("#tls-result-docs ol").html(html);
 
 				// Links
-				$("#tls-result-docs ol li a").click(function (event) {
-					var lnk = $(this).attr("href");
-					$("#tls-result-carto iframe").attr("src",lnk);
-					
-					// Cancel event
-					event.preventDefault();
-					return false;
-				});
+				$("#tls-result-docs ol li a").click(SearchComponents.toulouse.showToulouseElement);
+				
+				// Bind Fable scrolling
+				$("#tls-next").appear(SearchComponents.toulouse.scrollData);
 			});
+		},
+		scrollData : function() {
+			if (SearchComponents.toulouse.scrollId) {
+				$("#tls-next").addClass("loading");
+				// send next request
+				var url = "/_search/scroll?scroll=5m&scroll_id=" + SearchComponents.toulouse.scrollId;
+				var rest = new RestServiceJs(url);
+				rest.findAll(function (json) {
+					// Remove waiting
+					$("#tls-next").removeClass("loading");
+
+					if (json.hits.hits.length>0) {
+						// Handle next Scroll ID
+						SearchComponents.toulouse.scrollId = json._scroll_id;
+
+						var html;
+						// Result
+						html = ich.esInfo(json);
+						$("#tls-result-info").html(html);
+
+						// Facet
+						if (json.facets) {
+							SearchComponents.toulouse.displayFacets(json.facets);
+						}
+
+						// Hits
+						var hits = json.hits;
+						SearchComponents.toulouse.fillHitsData(hits);
+					
+						html = ich.esDoc(hits);
+						$("#tls-result-docs ol").append(html);
+
+						// Links
+						$("#tls-result-docs ol li a").click(SearchComponents.toulouse.showToulouseElement);
+					
+						// Re Bind Fable scrolling
+						$("#tls-next").appear(SearchComponents.toulouse.scrollData);
+					} else {
+						SearchComponents.toulouse.scrollId = null;
+					}
+				});
+			}
+		},
+		fillHitsData : function(hits) {
+			// Create data
+			$.each(hits.hits, function (index, hits){
+				hits.link =  function () {
+					return getOsmLinks(this._source.wgs84.lon, this._source.wgs84.lat);	
+				};
+				
+				hits.text = function() {
+					var txt;
+					var src = this._source;
+					if (this._type=="VERRE") {
+						txt = src.adresse;
+					} else if (this._type=="VELO") {
+						txt = "[ "+src.nb_bornettes+"] " + src.nom + " - " + src.adresse;
+					} else if (this._type=="METRO") {
+						txt =  "["+src.ligne+"] "+ src.nom;
+		     		} else if (this._type=="TRAMWAY") {
+						txt = src.nom;
+		     		} else if (this._type=="EMBALLAGE") {
+						txt = "[ " + src.type + "] " + src.adresse
+					}
+					
+					if (this._source.insee || this._source.commune) {
+						txt += " - " + this._source.insee + " " + this._source.commune;
+					}
+					return txt;
+				};
+			});	
+		},
+		showToulouseElement : function(event) {
+			var lnk = $(this).attr("href");
+			$("#tls-result-carto iframe").attr("src",lnk);
+			
+			// Cancel event
+			event.preventDefault();
+			return false;
+		},
+		displayFacets : function(facets) {
+			// commune
+			if (facets.commune) {
+				var search = SearchComponents.toulouse.lastSearch;
+				$.each(facets.commune.terms, function (index, term){
+					term.hash = hashCode(term.term);
+				});
+			
+				html = ich.esFacets(facets);
+				$("#tls-result-facet").html(html);
+				$("#tls-result-facet input[type=checkbox]").click(SearchComponents.toulouse.doFilterFacet);
+			
+				// Check filtered facet
+				if (search.filter && search.filter.term && search.filter.term.commune) {
+			        var communes = search.filter.term.commune;
+					$.each(search.filter.term.commune, function(index, commune){
+						$("#facet-" + hashCode(commune)).attr("checked","checked");
+					});
+				} else {
+			        $("#facet-ALL").attr("checked","checked");
+				}
+			} else if (facets.distance) {
+				$.each(facets.distance.ranges, function(index, range) {
+					if (range.to && range.from) {
+						range.label = "[ "+range.from+", " + range.to+" ]";
+					} else if (range.to) {
+						range.label = "[ 0 , " + range.to+" ]";
+					} else if (range.from) {
+						range.label = "[ "+range.from+", ∞ ]";
+					}	
+				});
+
+				html = ich.esGeoFacets(facets);
+				$("#tls-result-facet").html(html);
+				$("#tls-result-facet input[type=radio]").click(SearchComponents.toulouse.doFilterGeoFacet);
+				
+				// Check filtered Facet
+				if (search && search.filter && search.filter.geo_distance_range) {
+					var value = "" + search.filter.geo_distance_range.from +"," + search.filter.geo_distance_range.to;
+					$("input[type=radio][name=tls-facet-distance-range]").each(function(idx, elt){
+						if (value == $(elt).attr("value")) {
+							$(elt).attr("checked","checked");	
+						}
+					});
+				}
+			}	
 		},
 		searchAll: function() {
 			var search =  {
@@ -250,11 +374,9 @@ var SearchComponents = {
 				}
 			} else {
 				$("#facet-ALL").removeAttr("checked");
-				$("#tls-facet-commune input[type=checkbox]").each( function() {
+				$("#tls-facet-commune input[type=checkbox]:checked").each( function() {
 					var commune = $(this).val();
-					if ($(this).is(":checked")) {
-						search.filter.term.commune.push(commune);
-					}
+					search.filter.term.commune.push(commune);
 				});
 			}
 			// Store query
@@ -357,9 +479,12 @@ $(function(){
 		
 		// Clean Search
 		$("#tls-result-facet").empty();
-		$("#tls-result-docs").empty();
+		$("#tls-result-docs ol").empty();
 		$("#fbl-result-info").empty();
 		$("#fbl-result-text").empty();
+		
+		// Focus
+		$(""+name+"-query").focus();
 	});
 	// Click on active link
 	$("#topBar li.active a").click();
@@ -397,7 +522,6 @@ $(function(){
 		event.preventDefault();
 		return false;
 	});
-	
 });
 
 // REST

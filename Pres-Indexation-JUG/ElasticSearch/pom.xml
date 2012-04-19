@@ -39,7 +39,7 @@
 
 		<!-- Indexing with elasticsearch -->
 		<!--<elasticsearch.version>0.20.0.Beta1-SNAPSHOT</elasticsearch.version>-->
-		<elasticsearch.version>0.19.1</elasticsearch.version>
+		<elasticsearch.version>0.19.2</elasticsearch.version>
 		<joda-time.version>1.6.2</joda-time.version>
 
 		<!-- Tika -->
