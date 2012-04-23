@@ -74,6 +74,14 @@
 				</li>
 		{{/hits}}
 	</script>
+	<script id="esAnalyze" type="text/html">
+		<div>
+			<h2>{{title}}</h2>
+			{{#tokens}}
+			<span>{{token}}</span>
+			{{/tokens}}
+		</div>
+	</script>
 </head>
 <body>
 	<div class="navbar navbar-fixed-top">
@@ -89,7 +97,7 @@
 					<ul id="topBar" class="nav">
 						<li class="active"><a href="#tls">Toulouse</a></li>
 						<li><a href="#fbl">Fables</a></li>
-						<li><a href="#about">About</a></li>
+						<li><a href="#analysis">Analyse</a></li>
 					</ul>
 				</div><!--/.nav-collapse -->
 			</div>
@@ -193,19 +201,16 @@
 		</div>
 
 		<!-- About-->
-		<div id="about-search" class="container hidden">
-			<div class="hero-unit">
-				<h1>Index Engine in Java</h1>
-				<p>Demo website for ToulouseJUG</p>
-				<p><a class="btn btn-primary btn-large">Learn more &raquo;</a></p>
-			</div>
-			<div>
-				Credits.
-				ElasticSearch
-				Twitter Bootstrap
-				JQuery
-				ICanHaz &amp; Mustach
-				modernizr
+		<div id="analysis-search" class="container hidden">
+			<h1>Analyse</h1>
+			<form class="well form-search">
+				<textarea id="analysis-query" rows="5" class="span10">Maître Corbeau, sur un arbre perché, Tenait en son bec un fromage.</textarea>
+				<button class="btn btn-primary">
+					<i class="icon-cog icon-white"></i>
+				</button>
+			</form>
+			<!-- Analysis Result-->
+			<div id="analysis-result-info">
 			</div>
 		</div>
 	</div>

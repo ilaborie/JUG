@@ -270,9 +270,9 @@ var SearchComponents = {
 			return false;
 		},
 		displayFacets : function(facets) {
+			var search = SearchComponents.toulouse.lastSearch;
 			// commune
 			if (facets.commune) {
-				var search = SearchComponents.toulouse.lastSearch;
 				$.each(facets.commune.terms, function (index, term){
 					term.hash = hashCode(term.term);
 				});
@@ -282,9 +282,9 @@ var SearchComponents = {
 				$("#tls-result-facet input[type=checkbox]").click(SearchComponents.toulouse.doFilterFacet);
 			
 				// Check filtered facet
-				if (search.filter && search.filter.term && search.filter.term.commune) {
-			        var communes = search.filter.term.commune;
-					$.each(search.filter.term.commune, function(index, commune){
+				if (search.filter && search.filter.terms && search.filter.terms.commune) {
+			        var communes = search.filter.terms.commune;
+					$.each(search.filter.terms.commune, function(index, commune){
 						$("#facet-" + hashCode(commune)).attr("checked","checked");
 					});
 				} else {
@@ -293,11 +293,11 @@ var SearchComponents = {
 			} else if (facets.distance) {
 				$.each(facets.distance.ranges, function(index, range) {
 					if (range.to && range.from) {
-						range.label = "[ "+range.from+", " + range.to+" ]";
+						range.label = "[ " + range.from + ", " + range.to+" ]";
 					} else if (range.to) {
-						range.label = "[ 0 , " + range.to+" ]";
+						range.label = "[ 0 , " + range.to + " ]";
 					} else if (range.from) {
-						range.label = "[ "+range.from+", ∞ ]";
+						range.label = "[ " + range.from + ", ∞ ]";
 					}	
 				});
 
@@ -360,7 +360,7 @@ var SearchComponents = {
 			var search = SearchComponents.toulouse.lastFacetQuery;
 			// Initialize filter
 			search.filter = { 
-				term : {
+				terms : {
 					commune : []
 				}
 			};
@@ -376,7 +376,7 @@ var SearchComponents = {
 				$("#facet-ALL").removeAttr("checked");
 				$("#tls-facet-commune input[type=checkbox]:checked").each( function() {
 					var commune = $(this).val();
-					search.filter.term.commune.push(commune);
+					search.filter.terms.commune.push(commune);
 				});
 			}
 			// Store query
@@ -464,6 +464,42 @@ var SearchComponents = {
 			// Search
 			SearchComponents.toulouse.doSearch(search);
 		}
+	}, analysis: {
+		doAnalyze : function(text) {
+			// Clear
+			$("#analysis-result-info").empty();
+			// Display Text
+			var html = ich.esAnalyze({
+				title: "Origine",
+				tokens: [ {
+					token : text
+				}]
+			});
+			$("#analysis-result-info").append(html);
+			// Analyze
+			var analyzers = [ "fr_token", "fr_lowerCase", "fr_ascii", "fr_stop", "fr_elision", "francais"];
+			var url = "/jug/_analyze?analyzer=";
+			$.each(analyzers,function(index, analyzer) {
+				var title = analyzer;
+				$.ajax({
+					type : 'POST',
+					url : url +  analyzer,
+					data :  text,
+					async : false,
+					dataType: 'jsonp',
+					jsonp: 'callback',
+					processData : false,
+					contentType : 'application/json',
+					success : function (json) {
+						json.title= title;
+						var html = ich.esAnalyze(json);
+						$("#analysis-result-info").append(html);
+					},
+					error : doOnRestError,
+					timeout : 60000
+				});
+			});
+		}
 	}
 };
 
@@ -521,6 +557,12 @@ $(function(){
 		// Cancel event
 		event.preventDefault();
 		return false;
+	});
+	
+	// Bind Analysis
+	$("#analysis-search form button").click(function(event) {
+		var text = $("#analysis-query").val();
+		SearchComponents.analysis.doAnalyze(text);
 	});
 });
 
